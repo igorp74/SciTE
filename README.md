@@ -1,0 +1,2 @@
+# SciTE
+SciTE configuration files
