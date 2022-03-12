@@ -46,6 +46,17 @@ function tbl_diff(a, b)
     return ret
 end
 
+
+-- 🚀[ Replace selected text ]
+function replaceOrInsert(text)
+    local sel = editor:GetSelText()
+    if string.len(sel) ~= 0 then
+        editor:ReplaceSel(text)
+    else
+        editor:AddText(text)
+    end
+end
+
 -- 💎💎💎  [HELPER FUNCTIONS END] 💎💎💎
 
 
@@ -53,7 +64,8 @@ end
 
 -- 🚀  [INSERT DATE]
 function InsertDate()
-   editor:AddText(os.date("%Y-%m-%d %H:%M:%S"))
+--    editor:AddText(os.date("%Y-%m-%d %H:%M:%S"))
+   replaceOrInsert(os.date("%Y-%m-%d %H:%M:%S"))
 end
 
 -- 🚀 [MARK CURRENT WORD]
