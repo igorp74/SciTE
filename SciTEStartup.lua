@@ -1,3 +1,7 @@
+--  LUA functions for SciTE
+-- ==========================
+
+
 -- 💎💎💎  [HELPER FUNCTIONS START] 💎💎💎
 
 -- 🚀 [Check if selected item numeric]
