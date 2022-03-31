@@ -57,6 +57,21 @@ function replaceOrInsert(text)
     end
 end
 
+
+local function pairsByKeys (t, f)
+    local a = {}
+    for n in pairs(t) do table.insert(a, n) end
+    table.sort(a, f)
+    local i = 0      -- iterator variable
+    local iter = function ()   -- iterator function
+        i = i + 1
+        if a[i] == nil then return nil
+        else return a[i], t[a[i]]
+        end
+    end
+    return iter
+end
+
 -- 💎💎💎  [HELPER FUNCTIONS END] 💎💎💎
 
 
@@ -206,6 +221,18 @@ function line_analysis()
         end
     end
 
+    local res_cn = {}
+
+    for x,y in ipairs(dup) do
+        local dc = 0
+        for z,w in ipairs(buf) do
+            if y==w then
+                dc = dc+1
+                res_cn[y]=dc
+            end
+        end
+    end
+
     local unq = tbl_diff(res, dup)
 
     table.sort(res)
@@ -226,6 +253,10 @@ function line_analysis()
     print('\n⚖ Duplicate lines')
     print('--------------------------')
     print(duplicates)
+    print('~~~~~~~~~~~~~~')
+    for key,value in pairsByKeys(res_cn) do
+        print(tostring(key) .. "\t\t(" .. tostring(value) .. ")")
+    end
     print('\n👍 No duplicates')
     print('----------------------------')
     print(only_unique)
@@ -259,6 +290,19 @@ function transpose_2_line()
   editor:ReplaceSel(out)
 end
 
+-- 🚀 [TRANSPOSE TO LINE]
+function trans_2_line()
+  local sel = editor:GetSelText()
+  local hash = {}
+  local res = {}
+
+  local eol = string.match(sel, "\n$")
+  local buf = lines(sel)
+
+  local out = table.concat(buf, "\\n")
+  if eol then out = out.."\n" end
+  editor:ReplaceSel(out)
+end
 
 -- 🚀 [TABS TO SPACES]
 function tabs_to_spaces_obey_tabstop()
