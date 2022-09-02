@@ -269,43 +269,41 @@ end
 
 -- 🚀 [TRANSPOSE TO LINE FOR SQL]
 function transpose_2_line()
-  local sel = editor:GetSelText()
-  local hash = {}
-  local res = {}
+    local sel = editor:GetSelText()
+    local hash = {}
+    local res = {}
 
-  local eol = string.match(sel, "\n$")
-  local buf = lines(sel)
+    local eol = string.match(sel, "\n$")
+    local buf = lines(sel)
 
-  for _,v in ipairs(buf) do
-    if (not hash[v]) then
-        -- Recognize numbers atextrange
-        if is_numeric(v) then
-           res[#res+1] = v
-        else
-           res[#res+1] = "'"..v.."'"
+    for _,v in ipairs(buf) do
+        if (not hash[v]) then
+            -- Recognize numbers atextrange
+            if is_numeric(v) then
+                res[#res+1] = v
+            else
+                if v:sub(1,1) == "'" then
+                    if v:sub(-1,-1) == "'" then
+                        res[#res+1] = v
+                    else
+                        res[#res+1] = v.."'"
+                    end
+                else
+                    if v:sub(-1,-1) == "'" then
+                        res[#res+1] = "'"..v
+                    else
+                        res[#res+1] = "'"..v.."'"
+                    end
+                end
+            end
+
+           hash[v] = true
         end
-
-       hash[v] = true
     end
-  end
 
-  local out = table.concat(res, ", ")
-  if eol then out = out.."\n" end
-  editor:ReplaceSel(out)
-end
-
--- 🚀 [TRANSPOSE TO LINE]
-function trans_2_line()
-  local sel = editor:GetSelText()
-  local hash = {}
-  local res = {}
-
-  local eol = string.match(sel, "\n$")
-  local buf = lines(sel)
-
-  local out = table.concat(buf, "\\n")
-  if eol then out = out.."\n" end
-  editor:ReplaceSel(out)
+    local out = table.concat(res, ", ")
+    if eol then out = out.."\n" end
+    editor:ReplaceSel(out)
 end
 
 -- 🚀 [TABS TO SPACES]
