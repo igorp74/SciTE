@@ -278,26 +278,47 @@ function transpose_2_line()
 
     for _,v in ipairs(buf) do
         if (not hash[v]) then
-            -- Recognize numbers atextrange
+            -- Recognize numbers
             if is_numeric(v) then
                 res[#res+1] = v
             else
-                if v:sub(1,1) == "'" then
-                    if v:sub(-1,-1) == "'" then
-                        res[#res+1] = v
+                ch_s  = v:sub(1,1)
+                ch_e  = v:sub(-1,-1)
+                str_m = v:sub(2,v:len()-1)
+
+                local str_res = ''
+                local cn = 0
+
+                for i = 2, v:len()-1, 1 do
+                    if v:sub(i,i) == "'" then
+                        if cn == 0 then
+                            str_res = str_res..v:sub(i,i)
+                        end
+                        cn = cn + 1
                     else
-                        res[#res+1] = v.."'"
+                        cn = 0
+                        str_res = str_res..v:sub(i,i)
+                    end
+                end
+
+                str_r = string.gsub(str_res,"'","''")
+
+                if ch_s == "'" then
+                    if ch_e == "'" then
+                        res[#res+1] = ch_s..str_r..ch_e
+                    else
+                        res[#res+1] = ch_s..str_r..ch_e.."'"
                     end
                 else
-                    if v:sub(-1,-1) == "'" then
-                        res[#res+1] = "'"..v
+                    if ch_e == "'" then
+                        res[#res+1] = "'"..ch_s..str_r..ch_e
                     else
-                        res[#res+1] = "'"..v.."'"
+                        res[#res+1] = "'"..ch_s..str_r..ch_e.."'"
                     end
                 end
             end
 
-           hash[v] = true
+            hash[v] = true
         end
     end
 
