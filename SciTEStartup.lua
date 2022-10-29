@@ -1,7 +1,3 @@
---  LUA functions for SciTE
--- ==========================
-
-
 -- 💎💎💎  [HELPER FUNCTIONS START] 💎💎💎
 
 -- 🚀 [Check if selected item numeric]
@@ -11,6 +7,37 @@ function is_numeric(x)
     end
     return false
 end
+
+
+function isWordChar(char)
+    local strChar = string.char(char)
+    local beginIndex = string.find(strChar, '%w')
+    if beginIndex ~= nil then
+        return true
+    end
+    if strChar == '_' or strChar == '$' then
+        return true
+    end
+
+    return false
+end
+
+
+function GetCurrentWord()
+    local beginPos = editor.CurrentPos
+    local endPos = beginPos
+    if editor.SelectionStart ~= editor.SelectionEnd then
+        return editor:GetSelText()
+    end
+    while isWordChar(editor.CharAt[beginPos-1]) do
+        beginPos = beginPos - 1
+    end
+    while isWordChar(editor.CharAt[endPos]) do
+        endPos = endPos + 1
+    end
+    return editor:textrange(beginPos,endPos)
+end
+
 
 -- 🚀 [Collect lines]
 function lines(str)
@@ -76,6 +103,17 @@ local function pairsByKeys (t, f)
     return iter
 end
 
+
+-- Reduces multiple characters occurances to just one.
+-- If char is not given, the character to be squeezed is the one under the caret.
+function squeeze(char)
+  if not char then char = editor.CharAt[editor.CurrentPos - 1] end
+  local s, e = editor.CurrentPos - 1, editor.CurrentPos - 1
+  while editor.CharAt[s] == char do s = s - 1 end
+  while editor.CharAt[e] == char do e = e + 1 end
+  editor:SetSel(s + 1, e)
+  editor:ReplaceSel( string.char(char) )
+end
 -- 💎💎💎  [HELPER FUNCTIONS END] 💎💎💎
 
 
@@ -108,37 +146,6 @@ function markOccurrences()
         s,e = editor:findtext(txt,flags,e+1)
     end
 end
-
-function isWordChar(char)
-    local strChar = string.char(char)
-    local beginIndex = string.find(strChar, '%w')
-    if beginIndex ~= nil then
-        return true
-    end
-    if strChar == '_' or strChar == '$' then
-        return true
-    end
-
-    return false
-end
-
-function GetCurrentWord()
-    local beginPos = editor.CurrentPos
-    local endPos = beginPos
-    if editor.SelectionStart ~= editor.SelectionEnd then
-        return editor:GetSelText()
-    end
-    while isWordChar(editor.CharAt[beginPos-1]) do
-        beginPos = beginPos - 1
-    end
-    while isWordChar(editor.CharAt[endPos]) do
-        endPos = endPos + 1
-    end
-    return editor:textrange(beginPos,endPos)
-end
-
-
-
 
 
 -- 🚀 [SORT SELECTED TEXT]
@@ -191,13 +198,6 @@ function remove_duplicates()
   if eol then out = out.."\n" end
   editor:ReplaceSel(out)
 end
-
-
- function underline_text(pos,len,ind)
-   local es = editor.EndStyled
-   editor:StartStyling(pos,INDIC_BOX)
-   editor:SetStyling(len,INDIC_BOX + ind)
- end
 
 
 -- 🚀 [ LINE ANALYSIS ]
@@ -327,6 +327,21 @@ function transpose_2_line()
     editor:ReplaceSel(out)
 end
 
+
+-- 🚀 [TRANSPOSE TO LINE]
+function trans_2_line()
+  local sel = editor:GetSelText()
+  local hash = {}
+  local res = {}
+
+  local eol = string.match(sel, "\n$")
+  local buf = lines(sel)
+
+  local out = table.concat(buf, "\\n")
+  if eol then out = out.."\n" end
+  editor:ReplaceSel(out)
+end
+
 -- 🚀 [TABS TO SPACES]
 function tabs_to_spaces_obey_tabstop()
     -- replace one tab tab followed by one or more (space or tab)
@@ -414,6 +429,12 @@ function stripTrailingSpaces(reportNoMatch)
     return count
 end
 
+-- Joins the current line with the line below, eliminating whitespace.
+function join_lines()
+  editor:BeginUndoAction()
+  editor:LineEnd() editor:Clear() editor:AddText(' ') squeeze()
+  editor:EndUndoAction()
+end
 
 -- 🚀[ FIGLETS]
 -- Figlet called from shell command (works in Linux)
