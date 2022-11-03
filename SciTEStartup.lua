@@ -461,3 +461,33 @@ function figlet()
     res = cmd_output("figlet -f Roman", str)
     editor:ReplaceSel(res)
 end
+
+
+-- 🚀[ Script for increment and decrement number by 1]
+-- This script increment the number after the cursor in text.
+function NumPlusPlus()
+    output:ClearAll()
+    local StartPos = editor.CurrentPos
+    local CurLine = editor:LineFromPosition(StartPos)
+ 
+    local fs,fe = editor:findtext("\\-*[0-9]+", SCFIND_REGEXP,StartPos)
+    editor:SetSel(fs,fe)
+    local Number = editor:GetSelText()
+ 
+    editor:ReplaceSel(string.format("%d",tostring(Number + 1)))
+    editor:GotoPos(fs)
+end
+
+-- This script decrement the number after the cursor in text.
+function NumMinusMinus()
+    output:ClearAll()
+    local StartPos = editor.CurrentPos
+    local CurLine = editor:LineFromPosition(StartPos)
+    
+    local fs,fe = editor:findtext("\\-*[0-9]+", SCFIND_REGEXP,StartPos)
+    editor:SetSel(fs,fe)
+    local Number = editor:GetSelText()
+    
+    editor:ReplaceSel(string.format("%d",tostring(Number - 1)))
+    editor:GotoPos(fs)
+end
