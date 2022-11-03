@@ -1,3 +1,7 @@
+--  LUA functions for SciTE
+-- ==========================
+
+
 -- 💎💎💎  [HELPER FUNCTIONS START] 💎💎💎
 
 -- 🚀 [Check if selected item numeric]
@@ -20,22 +24,6 @@ function isWordChar(char)
     end
 
     return false
-end
-
-
-function GetCurrentWord()
-    local beginPos = editor.CurrentPos
-    local endPos = beginPos
-    if editor.SelectionStart ~= editor.SelectionEnd then
-        return editor:GetSelText()
-    end
-    while isWordChar(editor.CharAt[beginPos-1]) do
-        beginPos = beginPos - 1
-    end
-    while isWordChar(editor.CharAt[endPos]) do
-        endPos = endPos + 1
-    end
-    return editor:textrange(beginPos,endPos)
 end
 
 
@@ -104,8 +92,22 @@ local function pairsByKeys (t, f)
 end
 
 
--- Reduces multiple characters occurances to just one.
--- If char is not given, the character to be squeezed is the one under the caret.
+function GetCurrentWord()
+    local beginPos = editor.CurrentPos
+    local endPos = beginPos
+    if editor.SelectionStart ~= editor.SelectionEnd then
+        return editor:GetSelText()
+    end
+    while isWordChar(editor.CharAt[beginPos-1]) do
+        beginPos = beginPos - 1
+    end
+    while isWordChar(editor.CharAt[endPos]) do
+        endPos = endPos + 1
+    end
+    return editor:textrange(beginPos,endPos)
+end
+
+
 function squeeze(char)
   if not char then char = editor.CharAt[editor.CurrentPos - 1] end
   local s, e = editor.CurrentPos - 1, editor.CurrentPos - 1
@@ -114,6 +116,8 @@ function squeeze(char)
   editor:SetSel(s + 1, e)
   editor:ReplaceSel( string.char(char) )
 end
+
+
 -- 💎💎💎  [HELPER FUNCTIONS END] 💎💎💎
 
 
@@ -330,17 +334,18 @@ end
 
 -- 🚀 [TRANSPOSE TO LINE]
 function trans_2_line()
-  local sel = editor:GetSelText()
-  local hash = {}
-  local res = {}
+    local sel = editor:GetSelText()
+    local hash = {}
+    local res = {}
 
-  local eol = string.match(sel, "\n$")
-  local buf = lines(sel)
+    local eol = string.match(sel, "\n$")
+    local buf = lines(sel)
 
-  local out = table.concat(buf, "\\n")
-  if eol then out = out.."\n" end
-  editor:ReplaceSel(out)
+    local out = table.concat(buf, "\\n")
+    if eol then out = out.."\n" end
+    editor:ReplaceSel(out)
 end
+
 
 -- 🚀 [TABS TO SPACES]
 function tabs_to_spaces_obey_tabstop()
@@ -350,15 +355,24 @@ function tabs_to_spaces_obey_tabstop()
             local posColumn = ( scite.SendEditor(SCI_GETCOLUMN, (m.pos ) ) )
             local poslenColumn = ( scite.SendEditor(SCI_GETCOLUMN, (m.pos + m.len) ) )
             m:replace(string.rep(' ', poslenColumn - posColumn ))
-		end
+        end
 end
 
 
 -- 🚀 [ENCLOSE BRACES AUTOMATICALLY]
-local Braces={['[']=']',['\'']='\'',['{']='}',['(']=')',['"']='"'}
-OnChar=function(c)
-    c=Braces[c]
-    if c and editor.Focus then editor:insert(-1,c) end
+local char_matches = {['('] = ')', ['['] = ']', ['{'] = '}',["'"] = "'", ['"'] = '"'}
+function _G.OnChar(c)
+    if char_matches[c] and editor.Focus then
+        editor:InsertText( -1, char_matches[c] )
+    end
+end
+
+-- 🚀[JOIN LINES ]
+-- Joins the current line with the line below, eliminating whitespace.
+function join_lines()
+  editor:BeginUndoAction()
+  editor:LineEnd() editor:Clear() editor:AddText(' ') squeeze()
+  editor:EndUndoAction()
 end
 
 
@@ -375,6 +389,16 @@ function print_marked_lines()
     end
     local text = table.concat(lines)
     print(text)
+end
+
+-- 🚀[ PRINT SELECTED PATTERN ]
+-- Print selected pattern as a whole word matching
+function print_selected_patterns()
+  local sel = editor:GetSelText()
+  for m in editor:match(sel.."\\w+", SCFIND_REGEXP) do
+    local res = editor:textrange(m.pos,m.pos+m.len)
+    print(res)
+  end
 end
 
 
@@ -429,12 +453,6 @@ function stripTrailingSpaces(reportNoMatch)
     return count
 end
 
--- Joins the current line with the line below, eliminating whitespace.
-function join_lines()
-  editor:BeginUndoAction()
-  editor:LineEnd() editor:Clear() editor:AddText(' ') squeeze()
-  editor:EndUndoAction()
-end
 
 -- 🚀[ FIGLETS]
 -- Figlet called from shell command (works in Linux)
