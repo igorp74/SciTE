@@ -287,7 +287,11 @@ function transpose_2_line()
                 res[#res+1] = v
             else
                 ch_s  = v:sub(1,1)
-                ch_e  = v:sub(-1,-1)
+                if v:len() == 1 then
+                    ch_e  = ''
+                else
+                    ch_e  = v:sub(-1,-1)
+                end
                 str_m = v:sub(2,v:len()-1)
 
                 local str_res = ''
@@ -469,11 +473,11 @@ function NumPlusPlus()
     output:ClearAll()
     local StartPos = editor.CurrentPos
     local CurLine = editor:LineFromPosition(StartPos)
- 
+
     local fs,fe = editor:findtext("\\-*[0-9]+", SCFIND_REGEXP,StartPos)
     editor:SetSel(fs,fe)
     local Number = editor:GetSelText()
- 
+
     editor:ReplaceSel(string.format("%d",tostring(Number + 1)))
     editor:GotoPos(fs)
 end
@@ -483,11 +487,11 @@ function NumMinusMinus()
     output:ClearAll()
     local StartPos = editor.CurrentPos
     local CurLine = editor:LineFromPosition(StartPos)
-    
+
     local fs,fe = editor:findtext("\\-*[0-9]+", SCFIND_REGEXP,StartPos)
     editor:SetSel(fs,fe)
     local Number = editor:GetSelText()
-    
+
     editor:ReplaceSel(string.format("%d",tostring(Number - 1)))
     editor:GotoPos(fs)
 end
