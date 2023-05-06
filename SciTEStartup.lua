@@ -1,5 +1,6 @@
+-- ====================
 --  LUA functions for SciTE
--- ==========================
+-- ====================
 
 
 -- 💎💎💎  [HELPER FUNCTIONS START] 💎💎💎
@@ -205,6 +206,15 @@ end
 
 
 -- 🚀 [ LINE ANALYSIS ]
+-- Line analysis is a concept script which could be transformed into couple more focused scripts like:
+-- "Remove duplicate lines"
+-- "Show only duplicate lines"
+-- "Show only duplicate lines, sorted and with frequencies"
+-- "Show only unique lines"
+--
+-- In case you work with large text files, it could be a good case to transform this into focused functions.
+-- Also, for not large files it could be handy to have this kind of overview.
+
 function line_analysis()
     local sel   = editor:GetSelText()
     local hash  = {}
@@ -255,18 +265,18 @@ function line_analysis()
     if eol then duplicates = duplicates.."\n" end
     if eol then only_unique = only_unique.."\n" end
 
-    print('⚙️ Unique lines')
-    print('--------------------')
+    print('⚙️ Overall unique lines (removed duplicates, sorted)')
+    print('----------------------------------------------------')
     print(all_unique)
-    print('\n⚖ Duplicate lines')
+    print('\n⚖ Only duplicate lines')
     print('--------------------------')
     print(duplicates)
-    print('~~~~~~~~~~~~~~')
+    print('~~~ with frequencies ~~~')
     for key,value in pairsByKeys(res_cn) do
         print(tostring(key) .. "\t\t(" .. tostring(value) .. ")")
     end
-    print('\n👍 No duplicates')
-    print('----------------------------')
+    print('\n👍 Only single ladies')
+    print('------------------------')
     print(only_unique)
 end
 
@@ -339,9 +349,6 @@ end
 -- 🚀 [TRANSPOSE TO LINE]
 function trans_2_line()
     local sel = editor:GetSelText()
-    local hash = {}
-    local res = {}
-
     local eol = string.match(sel, "\n$")
     local buf = lines(sel)
 
@@ -353,7 +360,7 @@ end
 
 -- 🚀 [TABS TO SPACES]
 function tabs_to_spaces_obey_tabstop()
-    -- replace one tab tab followed by one or more (space or tab)
+    -- replace one tab followed by one or more (space or tab)
     -- but obey tabstops (preserves alignment)
         for m in editor:match("[\\t][\\t ]*", SCFIND_REGEXP) do
             local posColumn = ( scite.SendEditor(SCI_GETCOLUMN, (m.pos ) ) )
@@ -364,8 +371,9 @@ end
 
 
 -- 🚀 [ENCLOSE BRACES AUTOMATICALLY]
-local char_matches = {['('] = ')', ['['] = ']', ['{'] = '}',["'"] = "'", ['"'] = '"'}
 function _G.OnChar(c)
+    local char_matches = {['('] = ')', ['['] = ']', ['{'] = '}',["'"] = "'", ['"'] = '"'}
+
     if char_matches[c] and editor.Focus then
         editor:InsertText( -1, char_matches[c] )
     end
@@ -396,10 +404,28 @@ function print_marked_lines()
 end
 
 -- 🚀[ PRINT SELECTED PATTERN ]
--- Print selected pattern as a whole word matching
+-- Print all words which BEGINS as selected pattern
 function print_selected_patterns()
   local sel = editor:GetSelText()
   for m in editor:match(sel.."\\w+", SCFIND_REGEXP) do
+    local res = editor:textrange(m.pos,m.pos+m.len)
+    print(res)
+  end
+end
+
+-- Print all words which CONTAINS selected pattern
+function print_contained_patterns()
+  local sel = editor:GetSelText()
+  for m in editor:match("\\w*"..sel.."\\w*", SCFIND_REGEXP) do
+    local res = editor:textrange(m.pos,m.pos+m.len)
+    print(res)
+  end
+end
+
+-- Print all words with REGEX MATCH with selected pattern
+function print_matched_patterns()
+  local sel = editor:GetSelText()
+  for m in editor:match(sel, SCFIND_REGEXP) do
     local res = editor:textrange(m.pos,m.pos+m.len)
     print(res)
   end
@@ -458,16 +484,7 @@ function stripTrailingSpaces(reportNoMatch)
 end
 
 
--- 🚀[ FIGLETS]
--- Figlet called from shell command (works in Linux)
-function figlet()
-    local str = editor:GetSelText()
-    res = cmd_output("figlet -f Roman", str)
-    editor:ReplaceSel(res)
-end
-
-
--- 🚀[ Script for increment and decrement number by 1]
+-- 🚀[ SCRIPT FOR INCREMENT AND DECREMENT NUMBER BY 1]
 -- This script increment the number after the cursor in text.
 function NumPlusPlus()
     output:ClearAll()
@@ -494,4 +511,27 @@ function NumMinusMinus()
 
     editor:ReplaceSel(string.format("%d",tostring(Number - 1)))
     editor:GotoPos(fs)
+end
+
+
+-- 🚀[ FIGLETS]
+-- Figlet called from shell command (works in Linux)
+function figlet()
+    local str = editor:GetSelText()
+    res = cmd_output("figlet -f Roman", str)
+    editor:ReplaceSel(res)
+end
+
+-- 🚀[ COLUMNS]
+-- Prepare the selected text to a single line with \n for CR, then use shell command column for show selected text as
+function columns()
+    local sel = editor:GetSelText()
+    local eol = string.match(sel, "\n$")
+    local buf = lines(sel)
+
+    local out = table.concat(buf, "\\n")
+    if eol then out = out.."\n" end
+
+    res = cmd_output('echo -e "'..out..'" | column -t -s "|"')
+    editor:ReplaceSel(res)
 end
