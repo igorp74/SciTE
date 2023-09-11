@@ -331,54 +331,60 @@ function transpose_2_line()
     local buf = lines(sel)
 
     for _,v in ipairs(buf) do
-        if (not hash[v]) then
-            -- Recognize numbers
-            if is_numeric(v) then
+    --         print(v, v:len())
+        -- Recognize numbers
+        if is_numeric(v) then
+            if (not hash[v]) then
                 res[#res+1] = v
-            else
-                ch_s  = v:sub(1,1)
-                ch_e  = v:sub(-1,-1)
-                str_m = v:sub(2,v:len()-1)
-
-                local str_res = ''
-                local cn = 0
-
-                for i = 2, v:len()-1, 1 do
-                    if v:sub(i,i) == "'" then
-                        if cn == 0 then
-                            str_res = str_res..v:sub(i,i)
-                        end
-                        cn = cn + 1
-                    else
-                        cn = 0
-                        str_res = str_res..v:sub(i,i)
-                    end
-                end
-
-                str_r = string.gsub(str_res,"'","''")
-
-                if ch_s == "'" then
-                    if ch_e == "'" then
-                        res[#res+1] = ch_s..str_r..ch_e
-                    else
-                        res[#res+1] = ch_s..str_r..ch_e.."'"
-                    end
-                else
-                    if ch_e == "'" then
-                        res[#res+1] = "'"..ch_s..str_r..ch_e
-                    else
-                        res[#res+1] = "'"..ch_s..str_r..ch_e.."'"
-                    end
-                end
             end
-
-            hash[v] = true
+        else
+            tmp = "'" .. v .. "'"
+            if (not hash[v]) then
+                res[#res+1] = tmp
+            end
         end
+        hash[v] = true
     end
+
 
     local out = table.concat(res, ", ")
     if eol then out = out.."\n" end
     editor:ReplaceSel(out)
+end
+
+
+-- 🚀 [SPLIT VALUES]
+-- Split words
+function split_words()
+    local str = editor:GetSelText()
+    local pat = "[^%s]*"
+    local tbl = {}
+    str:gsub(pat, function(x) tbl[#tbl+1]=trim(x)..'\n' end)
+    local text = table.concat(tbl)
+    editor:ReplaceSel(text)
+end
+
+-- Split CSV for SQL
+function split()
+    local str = editor:GetSelText()
+    local pat = "[^,]*"  -- everything except commas
+    local tbl = {}
+    local res = {}
+
+    str:gsub(pat, function(x) tbl[#tbl+1]=trim(x)..'\n' end)
+
+    for _,v in ipairs(tbl) do
+        -- Recognize numbers
+        if is_numeric(v) then
+            res[#res+1] = v
+        else
+            -- Remove single quotes from start and end position of words
+            res[#res+1] = string.sub(v,2,v:len()-2)..'\n'
+        end
+    end
+
+    local text = table.concat(res)
+    editor:ReplaceSel(text)
 end
 
 
@@ -459,28 +465,6 @@ end
 -- 🚀 [TRIM LEADING AND TRAILING SPACE AROUND STRING]
 function trim(s)
   return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
-end
-
-
--- 🚀 [SPLIT VALUES]
--- Split words
-function split_words()
-    local str = editor:GetSelText()
-    local pat = "[^%s]*" -- everything except commas
-    local tbl = {}
-    str:gsub(pat, function(x) tbl[#tbl+1]=trim(x)..'\n' end)
-    local text = table.concat(tbl)
-    editor:ReplaceSel(text)
-end
-
--- Split CSV
-function split()
-    local str = editor:GetSelText()
-    local pat = "[^,]*"  -- everything except commas
-    local tbl = {}
-    str:gsub(pat, function(x) tbl[#tbl+1]=trim(x)..'\n' end)
-    local text = table.concat(tbl)
-    editor:ReplaceSel(text)
 end
 
 
